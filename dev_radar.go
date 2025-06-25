@@ -13,6 +13,41 @@ import (
 	"time"
 )
 
+// ANSI color codes for styling
+const (
+	Reset = "\033[0m"
+	Bold  = "\033[1m"
+	Dim   = "\033[2m"
+
+	// Colors
+	Red     = "\033[31m"
+	Green   = "\033[32m"
+	Yellow  = "\033[33m"
+	Blue    = "\033[34m"
+	Magenta = "\033[35m"
+	Cyan    = "\033[36m"
+	White   = "\033[37m"
+
+	// Bright colors
+	BrightRed     = "\033[91m"
+	BrightGreen   = "\033[92m"
+	BrightYellow  = "\033[93m"
+	BrightBlue    = "\033[94m"
+	BrightMagenta = "\033[95m"
+	BrightCyan    = "\033[96m"
+	BrightWhite   = "\033[97m"
+
+	// Background colors
+	BgBlack   = "\033[40m"
+	BgRed     = "\033[41m"
+	BgGreen   = "\033[42m"
+	BgYellow  = "\033[43m"
+	BgBlue    = "\033[44m"
+	BgMagenta = "\033[45m"
+	BgCyan    = "\033[46m"
+	BgWhite   = "\033[47m"
+)
+
 type ServiceInfo struct {
 	Port       int
 	Service    string
@@ -31,38 +66,80 @@ type HostResult struct {
 }
 
 func main() {
-	fmt.Println("Development Server Network Scanner")
-	fmt.Println("==================================")
+	displayBanner()
 
 	// Get local network range
 	localIP, subnet, err := getLocalNetwork()
 	if err != nil {
-		fmt.Printf("Error getting local network: %v\n", err)
+		printError(fmt.Sprintf("Error getting local network: %v", err))
 		return
 	}
 
-	fmt.Printf("Local IP: %s\n", localIP)
-	fmt.Printf("Scanning network: %s\n", subnet)
+	printSection("Network Information")
+	printInfo("Local IP", localIP)
+	printInfo("Scanning network", subnet)
 	fmt.Println()
 
 	// Discover hosts
-	fmt.Println("Discovering hosts...")
+	printSection("Host Discovery")
+	printProgress("Discovering hosts...")
 	hosts := discoverHosts(subnet)
 
 	if len(hosts) == 0 {
-		fmt.Println("No hosts found on the network")
+		printWarning("No hosts found on the network")
 		return
 	}
 
-	fmt.Printf("Found %d active hosts\n", len(hosts))
+	printSuccess(fmt.Sprintf("Found %d active hosts", len(hosts)))
 	fmt.Println()
 
 	// Scan for development servers
-	fmt.Println("Scanning for development servers...")
+	printSection("Development Server Scanning")
 	results := scanDevelopmentServers(hosts)
 
 	// Display results
 	displayResults(results)
+}
+
+func displayBanner() {
+	fmt.Printf("%s%s", BrightCyan, Bold)
+	fmt.Println("  _____             _____           _            ")
+	fmt.Println(" |  __ \\           |  __ \\         | |           ")
+	fmt.Println(" | |  | | _____   _| |__) |__ _  __| | __ _ _ __ ")
+	fmt.Println(" | |  | |/ _ \\ \\ / /  _  // _` |/ _` |/ _` | '__|")
+	fmt.Println(" | |__| |  __/\\ V /| | \\ \\ (_| | (_| | (_| | |   ")
+	fmt.Println(" |_____/ \\___| \\_/ |_|  \\_\\__,_|\\__,_|\\__,_|_|   ")
+	fmt.Println("                                                  ")
+	fmt.Printf("%s%s          Development Server & Stack Scanner%s\n", BrightWhite, Bold, Reset)
+	fmt.Println()
+
+	// Draw decorative border
+	fmt.Printf("%s%s", BrightBlue, strings.Repeat("═", 80))
+	fmt.Printf("%s\n\n", Reset)
+}
+
+func printSection(title string) {
+	fmt.Printf("%s%s┌─ %s ─%s┐%s\n", BrightMagenta, Bold, title, strings.Repeat("─", 65-len(title)), Reset)
+}
+
+func printInfo(label, value string) {
+	fmt.Printf("%s%s│%s %s%-20s%s %s%s%s\n", BrightMagenta, Bold, Reset, Yellow, label+":", Reset, BrightWhite, value, Reset)
+}
+
+func printProgress(message string) {
+	fmt.Printf("%s%s│%s %s🔍 %s%s%s\n", BrightMagenta, Bold, Reset, BrightYellow, message, Reset, Reset)
+}
+
+func printSuccess(message string) {
+	fmt.Printf("%s%s│%s %s✅ %s%s%s\n", BrightMagenta, Bold, Reset, BrightGreen, message, Reset, Reset)
+}
+
+func printWarning(message string) {
+	fmt.Printf("%s%s│%s %s⚠️  %s%s%s\n", BrightMagenta, Bold, Reset, BrightYellow, message, Reset, Reset)
+}
+
+func printError(message string) {
+	fmt.Printf("%s%s│%s %s❌ %s%s%s\n", BrightMagenta, Bold, Reset, BrightRed, message, Reset, Reset)
 }
 
 func getLocalNetwork() (string, string, error) {
@@ -124,7 +201,7 @@ func getMaskBits(mask net.IPMask) int {
 func discoverHosts(subnet string) []string {
 	_, ipNet, err := net.ParseCIDR(subnet)
 	if err != nil {
-		fmt.Printf("Error parsing CIDR: %v\n", err)
+		printError(fmt.Sprintf("Error parsing CIDR: %v", err))
 		return nil
 	}
 
@@ -199,7 +276,8 @@ func scanDevelopmentServers(hosts []string) []HostResult {
 		go func(host string) {
 			defer wg.Done()
 
-			fmt.Printf("Scanning %s for development servers...\n", host)
+			fmt.Printf("%s%s│%s %s🔍 Scanning %s%s%s for development servers...\n",
+				BrightMagenta, Bold, Reset, BrightCyan, BrightWhite, host, Reset)
 			services := scanDevPorts(host)
 
 			if len(services) > 0 {
@@ -469,53 +547,87 @@ func getHostname(ip string) string {
 }
 
 func displayResults(results []HostResult) {
-	fmt.Println("\n" + strings.Repeat("=", 80))
-	fmt.Println("DEVELOPMENT SERVERS FOUND")
-	fmt.Println(strings.Repeat("=", 80))
+	fmt.Printf("\n%s%s", BrightMagenta, Bold)
+	fmt.Printf("└%s┘\n\n", strings.Repeat("─", 78))
+	fmt.Printf("%s", Reset)
+
+	// Results header with decorative border
+	fmt.Printf("%s%s", BrightCyan, Bold)
+	fmt.Printf("╔%s╗\n", strings.Repeat("═", 78))
+	fmt.Printf("║%s%s║\n", centerText("🎯 DEVELOPMENT SERVERS DISCOVERED", 78), BrightCyan+Bold)
+	fmt.Printf("╚%s╝%s\n", strings.Repeat("═", 78), Reset)
+	fmt.Println()
 
 	if len(results) == 0 {
-		fmt.Println("No development servers found on the network.")
-		fmt.Println("Make sure the servers are running and accessible.")
+		printWarning("No development servers found on the network.")
+		fmt.Printf("%s%s💡 Make sure the servers are running and accessible.%s\n", BrightYellow, Bold, Reset)
 		return
 	}
 
-	for _, result := range results {
-		fmt.Printf("\n🖥️  HOST: %s", result.IP)
+	for i, result := range results {
+		// Host header with decorative styling
+		fmt.Printf("%s%s", BrightWhite, Bold)
+		fmt.Printf("┌─ 🖥️  HOST: %s%s%s", BrightCyan, result.IP, BrightWhite)
 		if result.Hostname != "" {
-			fmt.Printf(" (%s)", result.Hostname)
+			fmt.Printf(" (%s%s%s)", BrightGreen, result.Hostname, BrightWhite)
 		}
-		fmt.Println()
-		fmt.Println(strings.Repeat("-", 60))
+		fmt.Printf(" ─%s┐%s\n", strings.Repeat("─", 50-len(result.IP)), Reset)
 
-		for _, service := range result.Services {
-			fmt.Printf("  🌐 Port %d: %s\n", service.Port, service.Service)
+		for j, service := range result.Services {
+			// Service item with enhanced styling
+			fmt.Printf("%s│%s  %s🌐 Port %s%d%s: %s%s%s\n",
+				BrightWhite+Bold, Reset, BrightBlue, BrightYellow, service.Port, Reset,
+				BrightWhite, service.Service, Reset)
 
 			if service.Technology != "" {
-				fmt.Printf("     Technology: %s", service.Technology)
+				fmt.Printf("%s│%s     %s🔧 Technology:%s %s%s",
+					BrightWhite+Bold, Reset, BrightMagenta, Reset, getTechColor(service.Technology), service.Technology)
 				if service.Framework != "" && service.Framework != service.Technology {
-					fmt.Printf(" (%s)", service.Framework)
+					fmt.Printf(" (%s%s%s)", BrightCyan, service.Framework, Reset)
 				}
-				fmt.Println()
+				fmt.Printf("%s\n", Reset)
 			}
 
 			if service.Title != "" {
-				fmt.Printf("     Title: %s\n", service.Title)
+				fmt.Printf("%s│%s     %s📄 Title:%s %s%s%s\n",
+					BrightWhite+Bold, Reset, BrightYellow, Reset, BrightWhite, service.Title, Reset)
 			}
 
 			if service.Server != "" {
-				fmt.Printf("     Server: %s\n", service.Server)
+				fmt.Printf("%s│%s     %s⚙️  Server:%s %s%s%s\n",
+					BrightWhite+Bold, Reset, BrightCyan, Reset, Dim, service.Server, Reset)
 			}
 
-			fmt.Printf("     URL: %s\n", service.URL)
-			fmt.Printf("     Status: %s\n", service.Status)
-			fmt.Println()
+			fmt.Printf("%s│%s     %s🔗 URL:%s %s%s%s\n",
+				BrightWhite+Bold, Reset, BrightGreen, Reset, BrightBlue, service.URL, Reset)
+
+			statusColor := getStatusColor(service.Status)
+			fmt.Printf("%s│%s     %s📊 Status:%s %s%s%s\n",
+				BrightWhite+Bold, Reset, BrightRed, Reset, statusColor, service.Status, Reset)
+
+			if j < len(result.Services)-1 {
+				fmt.Printf("%s│%s\n", BrightWhite+Bold, Reset)
+			}
+		}
+
+		if i < len(results)-1 {
+			fmt.Printf("%s└%s┘%s\n\n", BrightWhite+Bold, strings.Repeat("─", 78), Reset)
+		} else {
+			fmt.Printf("%s└%s┘%s\n", BrightWhite+Bold, strings.Repeat("─", 78), Reset)
 		}
 	}
 
-	fmt.Printf("\n📊 Summary: Found %d hosts with %d development servers\n",
-		len(results), getTotalServices(results))
+	// Summary section with enhanced styling
+	fmt.Printf("\n%s%s", BrightMagenta, Bold)
+	fmt.Printf("╔%s╗\n", strings.Repeat("═", 78))
+	fmt.Printf("║%s%s║\n", centerText("📊 SCAN SUMMARY", 78), BrightMagenta+Bold)
+	fmt.Printf("╚%s╝%s\n", strings.Repeat("═", 78), Reset)
 
-	// Group by technology
+	totalServices := getTotalServices(results)
+	fmt.Printf("\n%s🏠 Total Hosts:%s %s%d%s\n", BrightGreen+Bold, Reset, BrightWhite, len(results), Reset)
+	fmt.Printf("%s🌐 Total Services:%s %s%d%s\n", BrightBlue+Bold, Reset, BrightWhite, totalServices, Reset)
+
+	// Technology distribution
 	techCount := make(map[string]int)
 	for _, result := range results {
 		for _, service := range result.Services {
@@ -526,11 +638,82 @@ func displayResults(results []HostResult) {
 	}
 
 	if len(techCount) > 0 {
-		fmt.Println("\n📈 Technology Distribution:")
+		fmt.Printf("\n%s%s📈 Technology Distribution:%s\n", BrightYellow, Bold, Reset)
+
+		// Create sorted slice of technologies
+		type techPair struct {
+			tech  string
+			count int
+		}
+		var techs []techPair
 		for tech, count := range techCount {
-			fmt.Printf("  %s: %d server(s)\n", tech, count)
+			techs = append(techs, techPair{tech, count})
+		}
+		sort.Slice(techs, func(i, j int) bool {
+			return techs[i].count > techs[j].count
+		})
+
+		for _, tp := range techs {
+			bars := strings.Repeat("█", tp.count)
+			fmt.Printf("  %s%-12s%s %s%s%s %s(%d)%s\n",
+				getTechColor(tp.tech), tp.tech, Reset,
+				getTechColor(tp.tech), bars, Reset,
+				Dim, tp.count, Reset)
 		}
 	}
+
+	fmt.Println()
+	fmt.Printf("%s%s🎉 Scan completed successfully! Happy developing! 🚀%s\n", BrightGreen, Bold, Reset)
+}
+
+func getTechColor(tech string) string {
+	switch strings.ToLower(tech) {
+	case "react", "next.js":
+		return BrightCyan
+	case "vue.js", "vue":
+		return BrightGreen
+	case "angular":
+		return BrightRed
+	case "python":
+		return BrightYellow
+	case "java":
+		return BrightRed
+	case "node.js", "javascript":
+		return BrightGreen
+	case ".net":
+		return BrightBlue
+	case "go":
+		return BrightCyan
+	case "ruby":
+		return BrightRed
+	case "php":
+		return BrightMagenta
+	default:
+		return BrightWhite
+	}
+}
+
+func getStatusColor(status string) string {
+	if strings.Contains(status, "200") {
+		return BrightGreen
+	} else if strings.Contains(status, "404") || strings.Contains(status, "403") {
+		return BrightRed
+	} else if strings.Contains(status, "301") || strings.Contains(status, "302") {
+		return BrightYellow
+	}
+	return BrightWhite
+}
+
+func centerText(text string, width int) string {
+	textLen := len(text)
+	if textLen >= width {
+		return text
+	}
+
+	padding := (width - textLen) / 2
+	leftPad := strings.Repeat(" ", padding)
+	rightPad := strings.Repeat(" ", width-textLen-padding)
+	return leftPad + text + rightPad
 }
 
 func getTotalServices(results []HostResult) int {
