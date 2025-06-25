@@ -1,0 +1,111 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Initialize Go module
+      run: |
+        if [ ! -f go.mod ]; then
+          go mod init devradar
+        fi
+        go mod tidy
+    
+    - name: Build executables
+      run: |
+        mkdir -p dist
+        
+        # Build for Linux (amd64)
+        GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/devradar-linux-amd64 dev_radar.go
+        
+        # Build for Linux (arm64)
+        GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/devradar-linux-arm64 dev_radar.go
+        
+        # Build for macOS (amd64)
+        GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/devradar-macos-amd64 dev_radar.go
+        
+        # Build for macOS (arm64 - Apple Silicon)
+        GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/devradar-macos-arm64 dev_radar.go
+        
+        # Build for Windows (amd64)
+        GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/devradar-windows-amd64.exe dev_radar.go
+        
+        # Build for Windows (arm64)
+        GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o dist/devradar-windows-arm64.exe dev_radar.go
+        
+        # Make executables executable
+        chmod +x dist/devradar-*
+        
+        # List built files
+        ls -la dist/
+    
+    - name: Generate checksums
+      run: |
+        cd dist
+        sha256sum * > checksums.txt
+        echo "Generated checksums:"
+        cat checksums.txt
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: devradar-executables
+        path: dist/
+        retention-days: 90
+    
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        name: DevRadar ${{ github.ref_name }}
+        body: |
+          ## DevRadar ${{ github.ref_name }}
+          
+          🎯 DevRadar - Network scanner built for developers
+          
+          ### Downloads
+          
+          Choose the appropriate executable for your system:
+          
+          - **Linux AMD64**: `devradar-linux-amd64`
+          - **Linux ARM64**: `devradar-linux-arm64`
+          - **macOS Intel**: `devradar-macos-amd64`
+          - **macOS Apple Silicon**: `devradar-macos-arm64`
+          - **Windows AMD64**: `devradar-windows-amd64.exe`
+          - **Windows ARM64**: `devradar-windows-arm64.exe`
+          
+          ### Quick Start
+          
+          1. Download the appropriate executable
+          2. Make it executable (Linux/macOS): `chmod +x devradar-*`
+          3. Run: `./devradar-linux-amd64` or `devradar-windows-amd64.exe`
+          
+          ### Verification
+          
+          Verify integrity using `checksums.txt`:
+          ```bash
+          sha256sum -c checksums.txt
+          ```
+        files: |
+          dist/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
