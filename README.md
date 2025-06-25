@@ -15,7 +15,7 @@
 
 **DevRadar** is a powerful **Development-Focused Network Scanner** built in Go to help teams discover and identify development servers and hosted applications across a local network. Perfect for DevOps teams, developers working in shared environments, hackathons, and security audits.
 
-[![Build and Release](https://github.com/hamshad/DevRadar/actions/workflows/build.yml/badge.svg)](https://github.com/hamshad/DevRadar/actions/workflows/build.yml)
+[![Build and Release](https://github.com/hamshad/DevRadar/actions/workflows/build-release.yml/badge.svg)](https://github.com/hamshad/DevRadar/actions/workflows/build.yml)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#-installation--usage)
