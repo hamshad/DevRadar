@@ -5,14 +5,20 @@
  | |  | |/ _ \ \ / /  _  // _` |/ _` |/ _` | '__|
  | |__| |  __/\ V /| | \ \ (_| | (_| | (_| | |   
  |_____/ \___| \_/ |_|  \_\__,_|\__,_|\__,_|_|   
-
-       Development Server & Stack Scanner
+                                                 
+                                                 
+      Development Server & Stack Scanner
 ```
 
 
 # 🧪 DevRadar
 
 **DevRadar** is a powerful **Development-Focused Network Scanner** built in Go to help teams discover and identify development servers and hosted applications across a local network. Perfect for DevOps teams, developers working in shared environments, hackathons, and security audits.
+
+[![Build and Release](https://github.com/hamshad/DevRadar/actions/workflows/build.yml/badge.svg)](https://github.com/hamshad/DevRadar/actions/workflows/build.yml)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#-installation--usage)
 
 ---
 
@@ -126,35 +132,102 @@
 
 ## 📦 Installation & Usage
 
-### Prerequisites
-- **Go 1.18+** installed on your system
-- Network access to local subnet
-- Terminal/Command prompt access
+### 🎯 Quick Install (Recommended)
 
-### Quick Start
-1. **Clone or download** the repository:
+**Option 1: Download Pre-built Binaries** *(Easiest)*
+
+Visit the [**Releases Page**](https://github.com/hamshad/DevRadar/releases/latest) and download the appropriate executable for your system:
+
+| Platform | Architecture | Download |
+|----------|-------------|----------|
+| **Linux** | AMD64 (x86_64) | `devradar-linux-amd64` |
+| **Linux** | ARM64 | `devradar-linux-arm64` |
+| **macOS** | Intel (x86_64) | `devradar-macos-amd64` |
+| **macOS** | Apple Silicon (M1/M2) | `devradar-macos-arm64` |
+| **Windows** | AMD64 (x86_64) | `devradar-windows-amd64.exe` |
+| **Windows** | ARM64 | `devradar-windows-arm64.exe` |
+
+**Linux/macOS:**
+```bash
+# Download the appropriate binary
+wget https://github.com/hamshad/DevRadar/releases/latest/download/devradar-linux-amd64
+
+# Make it executable
+chmod +x devradar-linux-amd64
+
+# Run the scanner
+./devradar-linux-amd64
+```
+
+**Windows:**
+```cmd
+# Download devradar-windows-amd64.exe from releases
+# Run directly from command prompt or PowerShell
+devradar-windows-amd64.exe
+```
+
+### 🔧 Build from Source
+
+**Prerequisites:**
+- **Go 1.21+** installed on your system
+- Git (optional, for cloning)
+
+**Steps:**
+```bash
+# Clone the repository
+git clone https://github.com/hamshad/DevRadar.git
+cd DevRadar
+
+# Build for your platform
+go build -ldflags="-s -w" -o devradar dev_radar.go
+
+# Run the scanner
+./devradar
+```
+
+**Cross-compile for other platforms:**
+```bash
+# Linux AMD64
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o devradar-linux dev_radar.go
+
+# macOS ARM64 (Apple Silicon)
+GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o devradar-macos dev_radar.go
+
+# Windows AMD64
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o devradar.exe dev_radar.go
+```
+
+### 🚀 Running DevRadar
+
+Once you have the executable:
+
+1. **Simply run the binary:**
    ```bash
-   git clone https://github.com/hamshad/DevRadar.git
-   cd DevRadar
+   ./devradar-linux-amd64        # Linux
+   ./devradar-macos-arm64        # macOS
+   devradar-windows-amd64.exe    # Windows
    ```
 
-2. **Run the scanner**:
-   ```bash
-   go run dev_radar.go
-   ```
+2. **What happens automatically:**
+   - Detects your local network range
+   - Discovers active hosts
+   - Scans for development services
+   - Displays results with beautiful formatting
 
-3. **Alternative - Build and run**:
-   ```bash
-   go build -o devradar dev_radar.go
-   ./devradar
-   ```
+### 🔐 Verification
 
-### What Happens During Scan
-1. **Network Detection**: Automatically detects your local IP and network range
-2. **Host Discovery**: Pings common development and system ports to find active hosts
-3. **Service Scanning**: Tests 40+ development ports on each discovered host
-4. **Technology Identification**: Analyzes HTTP responses to identify frameworks
-5. **Report Generation**: Displays organized results with technology statistics
+All releases include checksums for security verification:
+
+```bash
+# Download checksums.txt from the release
+wget https://github.com/hamshad/DevRadar/releases/latest/download/checksums.txt
+
+# Verify integrity (Linux/macOS)
+sha256sum -c checksums.txt
+
+# Verify integrity (Windows PowerShell)
+Get-FileHash devradar-windows-amd64.exe -Algorithm SHA256
+```
 
 ---
 
@@ -192,18 +265,69 @@
 
 ---
 
+## 🔄 Continuous Integration
+
+DevRadar uses **GitHub Actions** for automated building and releasing:
+
+### 🏗️ Automated Builds
+- **Triggers**: Every push to `main`, PR creation, and tag creation
+- **Platforms**: Builds for 6 platform/architecture combinations
+- **Artifacts**: Stores build artifacts for 90 days
+- **Checksums**: Automatically generates SHA256 checksums for verification
+
+### 📋 Build Matrix
+| Platform | Architecture | Binary Name |
+|----------|-------------|-------------|
+| Linux | AMD64 | `devradar-linux-amd64` |
+| Linux | ARM64 | `devradar-linux-arm64` |
+| macOS | AMD64 | `devradar-macos-amd64` |
+| macOS | ARM64 | `devradar-macos-arm64` |
+| Windows | AMD64 | `devradar-windows-amd64.exe` |
+| Windows | ARM64 | `devradar-windows-arm64.exe` |
+
+### 🚀 Release Process
+1. **Tag Creation**: Create a version tag (e.g., `v1.0.0`)
+2. **Automatic Building**: GitHub Actions builds all platform binaries
+3. **Release Creation**: Automatically creates a GitHub release with:
+   - All platform binaries
+   - SHA256 checksums
+   - Release notes
+   - Download instructions
+
+---
+
 ## 🛡️ Security Considerations
 
 - **Local Network Only**: Designed for local network scanning, not internet-wide discovery
 - **Read-Only Operations**: Only performs GET requests, no data modification
 - **No Authentication**: Does not attempt to bypass authentication mechanisms
 - **Respectful Scanning**: Built-in rate limiting to avoid overwhelming target services
+- **Binary Verification**: All releases include SHA256 checksums for integrity verification
 
 ---
 
 ## 🤝 Contributing
 
-DevRadar is open for contributions! Whether it's adding new technology detection patterns, improving the UI, or optimizing performance, all contributions are welcome.
+DevRadar welcomes contributions! Here's how you can help:
+
+### 🐛 Reporting Issues
+- Use GitHub Issues to report bugs or request features
+- Include your OS, architecture, and DevRadar version
+- Provide steps to reproduce any issues
+
+### 💻 Development
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test across platforms (CI will help with this)
+5. Submit a pull request
+
+### 🔧 Areas for Contribution
+- **New Technology Detection**: Add support for more frameworks
+- **Performance Improvements**: Optimize scanning algorithms
+- **UI Enhancements**: Improve terminal output formatting
+- **Platform Support**: Add support for additional architectures
+- **Documentation**: Improve README, add examples, write tutorials
 
 ---
 
@@ -213,10 +337,21 @@ MIT License - Feel free to use, modify, and distribute!
 
 ---
 
+## 📊 Project Stats
+
+- **Language**: Go 1.21+
+- **Platforms**: Linux, macOS, Windows
+- **Architectures**: AMD64, ARM64
+- **CI/CD**: GitHub Actions
+- **License**: MIT
+- **Maintainer**: [@hamshad](https://github.com/hamshad)
+
+---
+
 **Made with ❤️ for developers who want to discover the hidden gems running on their network!**
 
 ---
 
 ## 🏷️ Tags
 
-`go` `golang` `network-scanner` `development-tools` `devops` `port-scanner` `technology-detection` `local-network` `dev-server` `stack-detection`
+`go` `golang` `network-scanner` `development-tools` `devops` `port-scanner` `technology-detection` `local-network` `dev-server` `stack-detection` `cross-platform` `github-actions` `automated-builds`
