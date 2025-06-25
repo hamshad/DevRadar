@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"runtime"
 	"sort"
@@ -72,6 +74,7 @@ func main() {
 	localIP, subnet, err := getLocalNetwork()
 	if err != nil {
 		printError(fmt.Sprintf("Error getting local network: %v", err))
+		waitForExit()
 		return
 	}
 
@@ -87,6 +90,7 @@ func main() {
 
 	if len(hosts) == 0 {
 		printWarning("No hosts found on the network")
+		waitForExit()
 		return
 	}
 
@@ -99,6 +103,19 @@ func main() {
 
 	// Display results
 	displayResults(results)
+
+	// Wait for user input before closing
+	waitForExit()
+}
+
+func waitForExit() {
+	fmt.Printf("\n%s%s", BrightYellow, Bold)
+	fmt.Printf("╔%s╗\n", strings.Repeat("═", 78))
+	fmt.Printf("║%s%s║\n", centerText("Press Enter to exit...", 78), BrightYellow+Bold)
+	fmt.Printf("╚%s╝%s\n", strings.Repeat("═", 78), Reset)
+
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
 }
 
 func displayBanner() {
